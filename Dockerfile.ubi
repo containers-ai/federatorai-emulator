@@ -1,0 +1,54 @@
+# This Dockerfile is used for building evictioner on https://connect.redhat.com
+FROM openshift/origin-release:golang-1.11 as builder
+#RUN yum update -y
+
+ENV GOPATH /go
+ENV PATH $GOPATH/bin:/usr/local/go/bin:$PATH
+
+WORKDIR /go/src/github.com/containers-ai/federatorai-emulator
+ADD . .
+
+# Build
+RUN make build
+
+# Copy the Federator.ai Agent into a thin image
+FROM registry.access.redhat.com/ubi7/ubi-minimal
+ENV SUMMARY="Federator.ai Emulator to generator emulation data."	\
+    DESCRIPTION="Federator.ai Emulator to generator emulation data." \
+    NAME="Federator.ai Emulator" \
+    VERSION="latest" \
+    USER_UID=1001 \
+    USER_NAME=alameda \
+    AIHOME=/opt/alameda/federatorai-emulator
+
+LABEL summary="$SUMMARY" \
+      description="$DESCRIPTION" \
+      io.k8s.description="$DESCRIPTION" \
+      io.k8s.display-name="$NAME" \
+      com.redhat.component="customer-container" \
+      name="$NAME" \
+      version="$VERSION" \
+      vendor="ProphetStor Data Services, Inc."
+
+WORKDIR ${AIHOME}
+COPY --from=builder /go/src/github.com/containers-ai/federatorai-emulator/tini /sbin/tini
+COPY --from=builder /go/src/github.com/containers-ai/federatorai-emulator/install_root.tgz /tmp/
+
+RUN set -x \
+    && microdnf update -y \
+    && microdnf install -y \
+        tar procps-ng psmisc findutils vim-minimal logrotate \
+    && microdnf clean all \
+    && echo "${USER_NAME}:x:${USER_UID}:0:Federator.ai:${AIHOME}:/bin/sh" >> /etc/passwd \
+    # The following lines for logrotate - startup script will add running user id into /etc/passwd
+    && chmod g+w /etc/passwd \
+    # logrotate need writable permission on "/var/lib/logrotate/"
+    && chmod ug+w /var/lib/logrotate /var/log \
+    # install packages
+    && cd / && tar xzvf /tmp/install_root.tgz && rm -fv /tmp/install_root.tgz \
+    && chown -R ${USER_UID}:root ${AIHOME} && chmod -R ug+w ${AIHOME} \
+    && mkdir -pv -m 775 /var/log/alameda && chown -R ${USER_UID}:root /var/log/alameda
+
+USER ${USER_ID}
+ENTRYPOINT ["/sbin/tini","-v", "--"]
+CMD ["/init.sh"]
