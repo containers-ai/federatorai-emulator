@@ -1,0 +1,88 @@
+/// This file has messages related to recommendations of containers, pods, and nodes
+syntax = "proto3";
+
+package containers_ai.alameda.v1alpha1.datahub;
+
+import "google/protobuf/timestamp.proto";
+import "alameda_api/v1alpha1/datahub/metadata.proto";
+import "alameda_api/v1alpha1/datahub/pod_assignment.proto";
+import "alameda_api/v1alpha1/datahub/metric.proto";
+import "alameda_api/v1alpha1/datahub/resource.proto";
+
+/**
+ * Represents a resource configuration recommendation
+ * 
+ * It includes recommended limits and requests for the initial stage (a container which is just started) and after the initial stage
+ *
+ */
+message ContainerRecommendation {
+    string name = 1;    
+    repeated MetricData limit_recommendations = 2;
+    repeated MetricData request_recommendations = 3;
+    repeated MetricData initial_limit_recommendations = 4;
+    repeated MetricData initial_request_recommendations = 5;
+}
+
+/**
+ * Represents a recommended pod-to-node assignment (i.e. pod placement)
+ * 
+ */
+message AssignPodPolicy {
+    google.protobuf.Timestamp time = 1;
+    oneof policy {
+        NodePriority node_priority = 2;
+        Selector node_selector = 3;
+        string node_name = 4;
+    };
+}
+
+/**
+ * Represents a set of container resource configuration recommendations of a pod
+ *
+ */
+message PodRecommendation {
+    NamespacedName namespaced_name = 1;
+    bool apply_recommendation_now = 2;
+    AssignPodPolicy assign_pod_policy = 3;
+    repeated ContainerRecommendation container_recommendations = 4;
+    google.protobuf.Timestamp start_time = 5;
+    google.protobuf.Timestamp end_time = 6;
+    TopController top_controller = 7;
+    string recommendation_id = 8;
+}
+
+enum ControllerRecommendedType {
+    CRT_Undefined = 0;
+    CRT_Primitive = 1;
+    CRT_K8s = 2;
+}
+
+message ControllerRecommendation {
+    ControllerRecommendedType    recommended_type = 1;
+    ControllerRecommendedSpec    recommended_spec = 2;
+    ControllerRecommendedSpecK8s recommended_spec_k8s = 3;
+}
+
+message ControllerRecommendedSpec {
+    NamespacedName            namespaced_name       = 1;
+    Kind                      kind                  = 2;
+    int32                     current_replicas      = 3;
+    int32                     desired_replicas      = 4;
+    google.protobuf.Timestamp time                  = 5;
+    google.protobuf.Timestamp create_time           = 6;
+    float                     current_cpu_requests  = 7;
+    float                     current_mem_requests  = 8;
+    float                     current_cpu_limits    = 9;
+    float                     current_mem_limits    = 10;
+    float                     desired_cpu_limits    = 11;
+    float                     desired_mem_limits    = 12;
+}
+
+message ControllerRecommendedSpecK8s {
+    NamespacedName            namespaced_name       = 1;
+    Kind                      kind                  = 2;
+    int32                     current_replicas      = 3;
+    int32                     desired_replicas      = 4;
+    google.protobuf.Timestamp time                  = 5;
+    google.protobuf.Timestamp create_time           = 6;
+}

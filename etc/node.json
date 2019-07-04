@@ -1,0 +1,7 @@
+{
+  "name":"<nodeName>",
+  "capacity":{
+    "cpu_cores":8,
+    "memory_bytes":33567522816
+  }
+}

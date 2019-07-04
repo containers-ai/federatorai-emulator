@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package containersai.common;
+
+option go_package = "github.com/containers-ai/api/common";
+
+enum DataType {
+    DATATYPE_UNDEFINED = 0;
+    DATATYPE_BOOL = 1;
+    DATATYPE_INT = 2;
+    DATATYPE_INT8 = 3;
+    DATATYPE_INT16 = 4;
+    DATATYPE_INT32 = 5;
+    DATATYPE_INT64 = 6;
+    DATATYPE_UINT = 7;
+    DATATYPE_UINT8 = 8;
+    DATATYPE_UINT16 = 9;
+    DATATYPE_UINT32 = 10;
+    DATATYPE_UTIN64 = 11;
+    DATATYPE_FLOAT32 = 12;
+    DATATYPE_FLOAT64 = 13;
+    DATATYPE_STRING = 14;
+}
+
+enum ColumnType {
+    COLUMNTYPE_UDEFINED = 0;
+    COLUMNTYPE_TAG = 1;
+    COLUMNTYPE_FIELD = 2;
+}

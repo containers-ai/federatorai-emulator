@@ -1,0 +1,74 @@
+syntax = "proto3";
+
+package containersai.common;
+
+import "common/types.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/containers-ai/api/common";
+
+enum DatabaseType {
+    UNDEFINED = 0;
+    INFLUXDB = 1;
+    PROMETHEUS = 2;
+}
+
+// Represents a time range definition
+message TimeRange {
+    google.protobuf.Timestamp start_time = 1;
+    google.protobuf.Timestamp end_time = 2;
+    google.protobuf.Timestamp timeout = 3;
+    google.protobuf.Duration step = 4;
+    enum AggregateFunction {
+        NONE = 0;
+        MAX = 1;
+    }
+    AggregateFunction aggregate_function = 5;
+    google.protobuf.Timestamp apply_time = 6;
+}
+
+message QueryCondition {
+    TimeRange time_range = 1;
+    enum Order {
+        ASC = 0;
+        DESC = 1;
+    }
+    Order order = 2;
+    string where_clause = 3;
+    repeated string selects = 4;
+    repeated string groups = 5;
+    uint64 limit = 6;
+}
+
+message Query {
+    string database = 1;
+    string table = 2;
+    string expression = 3;
+    QueryCondition condition = 4;
+}
+
+message Row {
+    google.protobuf.Timestamp time = 1;
+    repeated string values = 2;
+}
+
+message Group {
+    repeated Row rows = 1;
+}
+
+message ReadRawdata {
+    common.Query query = 1;
+    repeated string columns = 2;
+    repeated common.Group groups = 3;
+    string rawdata = 4;
+}
+
+message WriteRawdata {
+    string database = 1;
+    string table = 2;
+    repeated string columns = 3;
+    repeated common.Row rows = 4;
+    repeated common.ColumnType column_types = 5;
+    repeated common.DataType data_types = 6;
+}

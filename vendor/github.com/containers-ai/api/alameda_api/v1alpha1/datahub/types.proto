@@ -1,0 +1,59 @@
+/// This file has messages related to compute resources
+syntax = "proto3";
+
+package containers_ai.alameda.v1alpha1.datahub;
+
+import "google/protobuf/timestamp.proto";
+
+// The valid statuses of pods
+enum PodPhase {
+    Undefined = 0;
+    Pending = 1;
+    Running = 2;
+    Succeeded = 3;
+    Failed = 4;
+    Unknown = 5;
+    Completed = 6;
+    CrashLoopBackOff = 7;
+}
+
+// ContainerStateWaiting is a waiting state of a container
+message ContainerStateWaiting {
+    string reason = 1;
+    string message = 2;
+}
+
+// ContainerStateRunning is a running state of a container
+message ContainerStateRunning {
+    google.protobuf.Timestamp started_at = 1;
+}
+
+// ContainerStateTerminated is a terminated state of a container
+message ContainerStateTerminated {
+    int32 exit_code = 1;
+    string reason = 2;
+    string message = 3;
+    google.protobuf.Timestamp started_at = 4;
+    google.protobuf.Timestamp finished_at = 5;
+}
+
+// ContainerState holds a possible state of container
+message ContainerState {
+    ContainerStateWaiting waiting = 1;
+    ContainerStateRunning running = 2;
+    ContainerStateTerminated terminated = 3;
+}
+
+// ContainerStatus contains details for the current status of this container
+message ContainerStatus {
+    ContainerState state = 1;
+    ContainerState last_termination_state = 2;
+    int32 restart_count = 3;
+}
+
+// PodStatus represents information about the status of a pod
+message PodStatus {
+    PodPhase phase = 1;
+    string message = 2;
+    string reason = 3;
+}
