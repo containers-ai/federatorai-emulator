@@ -35,6 +35,10 @@ install_dir:
 
 install: install_dir
 	cp -fv etc/emulator.toml $(DEST_PREFIX)/etc/emulator/emulator.toml
+	cp -fv etc/metric_cpu.csv $(DEST_PREFIX)/etc/emulator/metric_cpu.csv
+	cp -fv etc/metric_memory.csv $(DEST_PREFIX)/etc/emulator/metric_memory.csv
+	cp -fv etc/node.json $(DEST_PREFIX)/etc/emulator/node.json
+	cp -fv etc/pod.json $(DEST_PREFIX)/etc/emulator/pod.json
 	cp -fv emulator/emulator $(DEST_PREFIX)/bin/
 	cp -fv $(SRC_DIR)/xray.sh $(DEST_PREFIX)/bin/ && chmod 755 $(DEST_PREFIX)/bin/xray.sh
 	# generate version.txt

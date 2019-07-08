@@ -3,6 +3,7 @@ package emulator
 import (
 	"encoding/json"
 	Datahub "github.com/containers-ai/api/alameda_api/v1alpha1/datahub"
+	"github.com/jinzhu/copier"
 )
 /*
 type PodMetadata struct {
@@ -122,4 +123,10 @@ func (c *ConvPodMetadata) SetNodeName(nodeName string) {
 
 func (c *ConvPodMetadata) GetPod() *Datahub.Pod {
 	return c.Pod
+}
+
+func (c *ConvPodMetadata) SetPod(pod *Datahub.Pod)  {
+	p := new(Datahub.Pod)
+	copier.Copy(&p, pod)
+	c.Pod = p
 }

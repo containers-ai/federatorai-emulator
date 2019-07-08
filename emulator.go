@@ -19,7 +19,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/status"
 	"google.golang.org/grpc/codes"
-	"github.com/jinzhu/copier"
 	"time"
 )
 
@@ -114,12 +113,11 @@ func NewExporter(namespace string) *Exporter {
 		if err != nil {
 			scope.Errorf(fmt.Sprintf("Unable load cpu performance data %s, %v", emulatorConf.Containers.ContainerCPUCsvFilepath, err))
 		} else if len(data) > 0 {
-			fmt.Println("data count:", len(data))
-			fmt.Println("contains Name:", containersName)
+			scope.Debugf(fmt.Sprintf("Data count:", len(data)))
+			scope.Debugf(fmt.Sprintf("Containers name:", containersName))
 			index := 0
 			for ; index < (len(containersName)); {
 				for _, v := range data {
-					fmt.Println("index:", index)
 					containersCPUPerformance[containersName[index]] = v
 					index ++
 					if index >= (len(containersName) - 1) {
@@ -234,7 +232,6 @@ func (e *Exporter) collectPodCPU(ch chan <- prometheus.Metric) {
 		value := float64(0)
 		i, ok := containersCPUPerformance[v]
 		if ok == false  {
-			fmt.Println("Unable to load from csv")
 			if emulatorConf.Containers.ContainerCPURandom == true {
 				if randomMax == 0 && randomMin == 0 {
 					value = emulator.GenerateRandomFloat64(nil, nil, 6)
@@ -243,17 +240,14 @@ func (e *Exporter) collectPodCPU(ch chan <- prometheus.Metric) {
 				}
 			}
 		} else {
-			fmt.Println("load from csv")
 			tm := time.Now().Local()
 			startHour, _ := strconv.ParseInt(emulatorConf.Containers.ContainerPulledStartHour, 10, 64)
 			dIndex := emulator.ConvertTimeMappingDataIndex(
 				&e.startTime, &tm, emulatorConf.Containers.ContainerDataStep, startHour, int64(len(i)))
 			value, _ = strconv.ParseFloat(i[dIndex], 64)
-			fmt.Println("value:", value)
 			value = value * float64(emulatorConf.Global.EmulatorPrometheusScrapSeconds) / float64(emulatorConf.Containers.ContainerDataStep)
 		}
 		// 	containerCPULabelName = []string{"container_name", "cpu", "id", "image", "name", "namespace", "pod_name"}
-		fmt.Println("container_name:", v)
 		e.countvecPodCPU.With(prometheus.Labels{"container_name": v, "cpu": "total", "id": v + "_1", "image": v + "emulator", "name": v, "namespace": emulatorConf.Global.EmulatorNamespace, "pod_name": v + "_1"}).Add(value)
 	}
 	e.countvecPodCPU.Collect(ch)
@@ -370,8 +364,8 @@ func (e *Exporter) createPodsMetadata() error {
 	podMetadata.SetNamesapce(emulatorConf.Global.EmulatorNamespace)
 	podMetadata.SetNodeName(emulatorConf.Global.EmulatorNodeName)
 	for _, containerName := range e.containerNames {
-		var pMetadata emulator.ConvPodMetadata
-		copier.Copy(&pMetadata, podMetadata)
+		pMetadata := new(emulator.ConvPodMetadata)
+		pMetadata.SetPod(podMetadata.Pod)
 		pMetadata.SetPodName(containerName)
 		pMetadata.SetContainerName(emulatorConf.Containers.ContainerPrefixName)
 		pods = append(pods, pMetadata.GetPod())
@@ -396,12 +390,11 @@ func (e *Exporter) createPodsMetadata() error {
 		scope.Errorf(fmt.Sprintf("Unable to create alameda container, %s", resp.Message))
 		return status.Errorf(codes.Internal, "Unable to create alameda container, %s", resp.Message)
 	}
-	scope.Debug(fmt.Sprintf("Create container status: %v", resp))
+	scope.Infof(fmt.Sprintf("Create container status: %v", resp))
 	return nil
 }
 
 func (e *Exporter) Collect(ch chan<- prometheus.Metric ) {
-	fmt.Println("EmulatorContainerIgnoreCreation:", emulatorConf.Global.EmulatorContainerIgnoreCreation)
 	if emulatorConf.Global.EmulatorContainerIgnoreCreation == false {
 		// Create Nodes metadata
 		e.createNodesMetadata()
@@ -441,10 +434,10 @@ func loadEmulatorConfiguration(emulatorConfPath string) *emulator.Config {
 		panic(errors.New("Unmarshal configuration failed: " + err.Error()))
 	} else {
 		if transmitterConfBin, err := json.MarshalIndent(eConf, "", "  "); err == nil {
-			fmt.Println("Display configuration")
+			scope.Debugf("Display configuration")
 			scope.Info(fmt.Sprintf("Transmitter configuration: %s", string(transmitterConfBin)))
 		} else {
-			fmt.Println("Unable to display configuration")
+			scope.Debugf("Unable to display configuration")
 		}
 	}
 	return &eConf
@@ -492,19 +485,14 @@ func main() {
 		*/
 	)
 	kingpin.Parse()
-
-	fmt.Println("configuration:", *configFile)
 	emulatorConf = loadEmulatorConfiguration(*configFile)
-	fmt.Println(emulatorConf)
-
 	*namespace = emulatorConf.Global.EmulatorNamespace
 	*listenAddress = emulatorConf.Global.EmulatorListenAddress
 	*metricsPath = emulatorConf.Global.EmulatorWebPath
 	*labelName = emulatorConf.Global.EmulatorLabelName
 	*labelValue = emulatorConf.Global.EmulatorLabelValue
-	fmt.Println(
-		"[Info]", "pattern:", *metricsPath,"listen address:", *listenAddress,
-		"namespace:", *namespace,"label name:", *labelName,"label value:", *labelValue)
+	scope.Infof(fmt.Sprintf("Pattern: %s, listen address: %s, namespace: %s, label name: %s, label value: %s",
+		*metricsPath, *listenAddress, *namespace, *labelName, *labelValue))
 
 	// Register dummy exporter
 	exporter := NewExporter(*namespace)
