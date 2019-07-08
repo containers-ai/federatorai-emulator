@@ -1,0 +1,106 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  annotations:
+    deprecated.daemonset.template.generation: '13'
+  creationTimestamp: '2019-06-17T10:09:04Z'
+  generation: 13
+  labels:
+    app: fake-node-exporter
+  name: fake-node-exporter
+  namespace: openshift-monitoring
+  resourceVersion: '896931'
+  selfLink: /apis/apps/v1/namespaces/openshift-monitoring/daemonsets/fake-node-exporter
+  uid: efafa8d1-90e7-11e9-80e8-005056984676
+spec:
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: fake-node-exporter
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: fake-node-exporter
+    spec:
+      containers:
+        - env:
+            - name: LABEL_NAME
+              value: deployment
+            - name: LABEL_VALUE
+              value: prometheus-fake-exporter
+            - name: VALUE_HTTP_ENDPOINT
+              value: >-
+                https://gist.githubusercontent.com/3h4x/38ba057db9cbb80c7bf8ad768a90d086/raw/value
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.namespace
+            - name: FAKE_SERVER_PORT
+              value: '9200'
+          image: >-
+            docker-registry.default.svc:5000/openshift-monitoring/prometheus-node-exporter:fake
+          imagePullPolicy: IfNotPresent
+          name: node-exporter
+          ports:
+            - containerPort: 9200
+              hostPort: 9200
+              name: http
+              protocol: TCP
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+            - mountPath: /host/proc
+              name: proc
+            - mountPath: /host/sys
+              name: sys
+            - mountPath: /host/root
+              mountPropagation: HostToContainer
+              name: root
+              readOnly: true
+      dnsPolicy: ClusterFirst
+      hostNetwork: true
+      hostPID: true
+      nodeSelector:
+        beta.kubernetes.io/os: linux
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      serviceAccount: node-exporter
+      serviceAccountName: node-exporter
+      terminationGracePeriodSeconds: 30
+      tolerations:
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/master
+      volumes:
+        - hostPath:
+            path: /proc
+            type: ''
+          name: proc
+        - hostPath:
+            path: /sys
+            type: ''
+          name: sys
+        - hostPath:
+            path: /
+            type: ''
+          name: root
+        - name: node-exporter-tls
+          secret:
+            defaultMode: 420
+            secretName: node-exporter-tls
+  updateStrategy:
+    rollingUpdate:
+      maxUnavailable: 1
+    type: RollingUpdate
+status:
+  currentNumberScheduled: 1
+  desiredNumberScheduled: 1
+  numberAvailable: 1
+  numberMisscheduled: 0
+  numberReady: 1
+  observedGeneration: 13
+  updatedNumberScheduled: 1
+

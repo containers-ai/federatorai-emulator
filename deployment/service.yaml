@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    service.alpha.openshift.io/serving-cert-generation-error: >-
+      secret/node-exporter-tls references serviceUID
+      7edfb38b-90ce-11e9-80e8-005056984676, which does not match
+      c764b138-90de-11e9-80e8-005056984676
+    service.alpha.openshift.io/serving-cert-generation-error-num: '10'
+    service.alpha.openshift.io/serving-cert-secret-name: node-exporter-tls
+  creationTimestamp: '2019-06-17T09:03:31Z'
+  labels:
+    k8s-app: fake-node-exporter
+  name: fake-node-exporter
+  namespace: openshift-monitoring
+  resourceVersion: '690463'
+  selfLink: /api/v1/namespaces/openshift-monitoring/services/fake-node-exporter
+  uid: c764b138-90de-11e9-80e8-005056984676
+spec:
+  clusterIP: None
+  ports:
+    - name: http
+      port: 9200
+      protocol: TCP
+      targetPort: http
+  selector:
+    app: fake-node-exporter
+  sessionAffinity: None
+  type: ClusterIP
+status:
+  loadBalancer: {}
+

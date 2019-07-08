@@ -1,0 +1,19 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  creationTimestamp: '2019-06-17T09:00:26Z'
+  generation: 1
+  labels:
+    k8s-app: fake-node-exporter
+  name: fake-node-exporter
+  namespace: openshift-monitoring
+  resourceVersion: '690198'
+  selfLink: >-
+    /apis/monitoring.coreos.com/v1/namespaces/openshift-monitoring/servicemonitors/fake-node-exporter
+  uid: 58e7a34a-90de-11e9-80e8-005056984676
+spec:
+  endpoints:
+    - port: http
+  selector:
+    matchLabels:
+      k8s-app: fake-node-exporter

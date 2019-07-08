@@ -1,0 +1,30 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  generation: 1
+  labels:
+    prometheus: k8s
+    role: alert-rules
+  name: prometheus-k8s-fake-rules
+  namespace: openshift-monitoring
+  resourceVersion: '903731'
+  selfLink: >-
+    /apis/monitoring.coreos.com/v1/namespaces/openshift-monitoring/prometheusrules/prometheus-k8s-fake-rules
+spec:
+  groups:
+    - name: k8sfake.rules
+      rules:
+        - expr: >
+            sum(rate(container_cpu_usage_seconds_total{job="fake-node-exporter", image!="",
+            container_name!=""}[5m])) by (namespace)
+          record: 'namespace:container_cpu_usage_seconds_total:sum_rate'
+        - expr: |
+            sum by (namespace, pod_name, container_name) (
+              rate(container_cpu_usage_seconds_total{job="fake-node-exporter", image!="", container_name!=""}[5m])
+            )
+          record: >-
+            namespace_pod_name_container_name:container_cpu_usage_seconds_total:sum_rate
+        - expr: >
+            sum(container_memory_usage_bytes{job="fake-node-exporter", image!="",
+            container_name!=""}) by (namespace)
+          record: 'namespace:container_memory_usage_bytes:sum'
