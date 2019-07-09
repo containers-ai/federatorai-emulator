@@ -6,8 +6,8 @@ apiVersion: security.openshift.io/v1
 kind: SecurityContextConstraints
 metadata:
   annotations:
-    kubernetes.io/description: fake-node-exporter scc is used for the Prometheus node exporter
-  name: fake-node-exporter
+    kubernetes.io/description: federatorai-emulator scc is used for the Prometheus node/pod exporter
+  name: federatorai-emulator
 readOnlyRootFilesystem: false
 runAsUser:
   type: RunAsAny

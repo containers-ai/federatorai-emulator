@@ -10,11 +10,11 @@ metadata:
     service.alpha.openshift.io/serving-cert-secret-name: node-exporter-tls
   creationTimestamp: '2019-06-17T09:03:31Z'
   labels:
-    k8s-app: fake-node-exporter
-  name: fake-node-exporter
+    k8s-app: federatorai-emulator
+  name: federatorai-emulator
   namespace: openshift-monitoring
   resourceVersion: '690463'
-  selfLink: /api/v1/namespaces/openshift-monitoring/services/fake-node-exporter
+  selfLink: /api/v1/namespaces/openshift-monitoring/services/federatorai-emulator
   uid: c764b138-90de-11e9-80e8-005056984676
 spec:
   clusterIP: None
@@ -24,7 +24,7 @@ spec:
       protocol: TCP
       targetPort: http
   selector:
-    app: fake-node-exporter
+    app: federatorai-emulator
   sessionAffinity: None
   type: ClusterIP
 status:

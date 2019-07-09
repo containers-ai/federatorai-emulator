@@ -6,29 +6,29 @@ metadata:
   creationTimestamp: '2019-06-17T10:09:04Z'
   generation: 13
   labels:
-    app: fake-node-exporter
-  name: fake-node-exporter
+    app: federatorai-emulator
+  name: federatorai-emulator
   namespace: openshift-monitoring
   resourceVersion: '896931'
-  selfLink: /apis/apps/v1/namespaces/openshift-monitoring/daemonsets/fake-node-exporter
+  selfLink: /apis/apps/v1/namespaces/openshift-monitoring/daemonsets/federatorai-emulator
   uid: efafa8d1-90e7-11e9-80e8-005056984676
 spec:
   revisionHistoryLimit: 10
   selector:
     matchLabels:
-      app: fake-node-exporter
+      app: federatorai-emulator
   template:
     metadata:
       creationTimestamp: null
       labels:
-        app: fake-node-exporter
+        app: federatorai-emulator
     spec:
       containers:
         - env:
             - name: LABEL_NAME
               value: deployment
             - name: LABEL_VALUE
-              value: prometheus-fake-exporter
+              value: federatorai-emulator
             - name: VALUE_HTTP_ENDPOINT
               value: >-
                 https://gist.githubusercontent.com/3h4x/38ba057db9cbb80c7bf8ad768a90d086/raw/value
@@ -40,7 +40,7 @@ spec:
             - name: FAKE_SERVER_PORT
               value: '9200'
           image: >-
-            docker-registry.default.svc:5000/openshift-monitoring/prometheus-node-exporter:fake
+            docker-registry.default.svc:5000/openshift-monitoring/federatorai-emulator:fake
           imagePullPolicy: IfNotPresent
           name: node-exporter
           ports:
