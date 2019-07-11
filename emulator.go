@@ -248,7 +248,7 @@ func (e *Exporter) collectPodCPU(ch chan <- prometheus.Metric) {
 			value = value * float64(emulatorConf.Global.EmulatorPrometheusScrapSeconds) / float64(emulatorConf.Containers.ContainerDataStep)
 		}
 		// 	containerCPULabelName = []string{"container_name", "cpu", "id", "image", "name", "namespace", "pod_name"}
-		e.countvecPodCPU.With(prometheus.Labels{"container_name": v, "cpu": "total", "id": v + "_1", "image": v + "emulator", "name": v, "namespace": emulatorConf.Global.EmulatorNamespace, "pod_name": v + "_1"}).Add(value)
+		e.countvecPodCPU.With(prometheus.Labels{"container_name": v, "cpu": "total", "id": v + "_1", "image": v + "emulator", "name": v, "namespace": emulatorConf.Containers.ContainersNamespace, "pod_name": v + "_1"}).Add(value)
 	}
 	e.countvecPodCPU.Collect(ch)
 }
@@ -293,7 +293,7 @@ func (e *Exporter) collectPodMemory(ch chan <- prometheus.Metric) {
 			value, _ = strconv.ParseFloat(i[dIndex], 64)
 		}
 		// containerMemoryLabelName = []string{"container_name", "id", "image", "name", "namespace", "pod_name"}
-		e.gaugevecPodMemory.With(prometheus.Labels{"container_name": v, "id": v + "_1", "image": v + "emulator", "name": v, "namespace": emulatorConf.Global.EmulatorNamespace, "pod_name": v + "_1"}).Set(value)
+		e.gaugevecPodMemory.With(prometheus.Labels{"container_name": v, "id": v + "_1", "image": v + "emulator", "name": v, "namespace": emulatorConf.Containers.ContainersNamespace, "pod_name": v + "_1"}).Set(value)
 	}
 	e.gaugevecPodMemory.Collect(ch)
 }

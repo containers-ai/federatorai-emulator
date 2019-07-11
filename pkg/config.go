@@ -24,6 +24,7 @@ type EmulatorGlobal struct {
 }
 
 type SubContainer struct {
+	ContainersNamespace string `mapstructure:"container_namespace"`
 	ContainerPrefixName string `mapstructure:"container_prefix_name"`
 	ContainerCPUCsvFilepath string `mapstructure:"container_cpu_csv_filepath"`
 	ContainerMemoryCsvFilepath string `mapstructure:"container_memory_csv_filepath"`
@@ -36,6 +37,7 @@ type SubContainer struct {
 }
 
 type Containers struct {
+	ContainersNamespace string `mapstructure:"container_namespace"`
 	ContainerCount int `mapstructure:"container_count"`
 	ContainerPrefixName string `mapstructure:"container_prefix_name"`
 	ContainerCPUCsvFilepath string `mapstructure:"container_cpu_csv_filepath"`

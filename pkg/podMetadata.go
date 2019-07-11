@@ -110,11 +110,13 @@ func (c *ConvPodMetadata) SetNamesapce(namespace string) {
 	c.Pod.NamespacedName.Namespace = namespace
 	c.Pod.AlamedaScaler.Namespace = namespace
 	c.Pod.TopController.NamespacedName.Namespace = namespace
+	c.Pod.NamespacedName.Name = namespace
 }
 
 func (c *ConvPodMetadata) SetContainerName(containerName string) {
 	c.Pod.AlamedaScaler.Name = "alameda-" + containerName
 	c.Pod.TopController.NamespacedName.Name = containerName
+	c.Pod.Containers[0].Name = containerName
 }
 
 func (c *ConvPodMetadata) SetNodeName(nodeName string) {
