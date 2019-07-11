@@ -368,6 +368,8 @@ func (e *Exporter) createPodsMetadata() error {
 		pMetadata.SetPod(podMetadata.Pod)
 		pMetadata.SetPodName(containerName)
 		pMetadata.SetContainerName(emulatorConf.Containers.ContainerPrefixName)
+		pMetadata.EnableHPA(true)
+		pMetadata.EnableVPA(true)
 		pods = append(pods, pMetadata.GetPod())
 	}
 

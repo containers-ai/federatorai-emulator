@@ -106,6 +106,14 @@ func (c *ConvPodMetadata) SetPodName(podName string) {
 	c.Pod.NamespacedName.Name = podName
 }
 
+func (c *ConvPodMetadata) EnableHPA(enabled bool) {
+	c.Pod.Enable_HPA = enabled
+}
+
+func (c *ConvPodMetadata) EnableVPA(enabled bool) {
+	c.Pod.Enable_VPA = enabled
+}
+
 func (c *ConvPodMetadata) SetNamesapce(namespace string) {
 	c.Pod.NamespacedName.Namespace = namespace
 	c.Pod.AlamedaScaler.Namespace = namespace
