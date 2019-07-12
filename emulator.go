@@ -248,7 +248,7 @@ func (e *Exporter) collectPodCPU(ch chan <- prometheus.Metric) {
 			value = value * float64(emulatorConf.Global.EmulatorPrometheusScrapSeconds) / float64(emulatorConf.Containers.ContainerDataStep)
 		}
 		// 	containerCPULabelName = []string{"container_name", "cpu", "id", "image", "name", "namespace", "pod_name"}
-		e.countvecPodCPU.With(prometheus.Labels{"container_name": v, "cpu": "total", "id": v + "_1", "image": v + "emulator", "name": v, "namespace": emulatorConf.Containers.ContainersNamespace, "pod_name": v + "_1"}).Add(value)
+		e.countvecPodCPU.With(prometheus.Labels{"container_name": v, "cpu": "total", "id": v + "_1", "image": v + "emulator", "name": v, "namespace": emulatorConf.Containers.ContainersNamespace, "pod_name": v}).Add(value)
 	}
 	e.countvecPodCPU.Collect(ch)
 }
@@ -293,7 +293,7 @@ func (e *Exporter) collectPodMemory(ch chan <- prometheus.Metric) {
 			value, _ = strconv.ParseFloat(i[dIndex], 64)
 		}
 		// containerMemoryLabelName = []string{"container_name", "id", "image", "name", "namespace", "pod_name"}
-		e.gaugevecPodMemory.With(prometheus.Labels{"container_name": v, "id": v + "_1", "image": v + "emulator", "name": v, "namespace": emulatorConf.Containers.ContainersNamespace, "pod_name": v + "_1"}).Set(value)
+		e.gaugevecPodMemory.With(prometheus.Labels{"container_name": v, "id": v + "_1", "image": v + "emulator", "name": v, "namespace": emulatorConf.Containers.ContainersNamespace, "pod_name": v}).Set(value)
 	}
 	e.gaugevecPodMemory.Collect(ch)
 }
@@ -356,16 +356,20 @@ func (e *Exporter) createPodsMetadata() error {
 			codes.Internal, "Unable to load container metadata from %s, %v",
 			emulatorConf.Global.EmulatorContainerMetadata, err)
 	}
-	podMetadata := emulator.NewPodMetadata(data)
-	if podMetadata == nil {
-		return status.Errorf(codes.Internal, "Unable to convert container metadata")
-	}
 
-	podMetadata.SetNamesapce(emulatorConf.Global.EmulatorNamespace)
-	podMetadata.SetNodeName(emulatorConf.Global.EmulatorNodeName)
 	for _, containerName := range e.containerNames {
+		podMetadata := emulator.NewPodMetadata(data)
+		if podMetadata == nil {
+			return status.Errorf(codes.Internal, "Unable to convert container metadata")
+		}
+		podMetadata.SetNamesapce(emulatorConf.Containers.ContainersNamespace)
+		podMetadata.SetNodeName(emulatorConf.Global.EmulatorNodeName)
+
 		pMetadata := new(emulator.ConvPodMetadata)
 		pMetadata.SetPod(podMetadata.Pod)
+		for _, v := range podMetadata.Pod.Containers {
+			pMetadata.SetContainer(v)
+		}
 		pMetadata.SetPodName(containerName)
 		pMetadata.SetContainerName(emulatorConf.Containers.ContainerPrefixName)
 		pMetadata.EnableHPA(true)
@@ -373,6 +377,10 @@ func (e *Exporter) createPodsMetadata() error {
 		pods = append(pods, pMetadata.GetPod())
 	}
 
+	scope.Infof(fmt.Sprintf("sample pod: %v", pods[0]))
+	for _, container := range pods[0].Containers {
+		scope.Infof(fmt.Sprintf("container: %v", container))
+	}
 	conn, err := grpc.Dial(emulatorConf.Datahub.Address, grpc.WithInsecure())
 	if err != nil {
 		scope.Error(fmt.Sprintf("Failed to connect data repository %s, %v", emulatorConf.Datahub.Address, err))

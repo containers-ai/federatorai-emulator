@@ -104,6 +104,7 @@ func NewPodMetadata(rawData []byte) *ConvPodMetadata {
 
 func (c *ConvPodMetadata) SetPodName(podName string) {
 	c.Pod.NamespacedName.Name = podName
+	c.Pod.Containers[0].Name = podName
 }
 
 func (c *ConvPodMetadata) EnableHPA(enabled bool) {
@@ -118,17 +119,16 @@ func (c *ConvPodMetadata) SetNamesapce(namespace string) {
 	c.Pod.NamespacedName.Namespace = namespace
 	c.Pod.AlamedaScaler.Namespace = namespace
 	c.Pod.TopController.NamespacedName.Namespace = namespace
-	c.Pod.NamespacedName.Name = namespace
 }
 
 func (c *ConvPodMetadata) SetContainerName(containerName string) {
 	c.Pod.AlamedaScaler.Name = "alameda-" + containerName
 	c.Pod.TopController.NamespacedName.Name = containerName
-	c.Pod.Containers[0].Name = containerName
 }
 
 func (c *ConvPodMetadata) SetNodeName(nodeName string) {
 	c.Pod.NodeName = nodeName
+	c.Pod.NamespacedName.Name = nodeName
 }
 
 func (c *ConvPodMetadata) GetPod() *Datahub.Pod {
@@ -137,6 +137,13 @@ func (c *ConvPodMetadata) GetPod() *Datahub.Pod {
 
 func (c *ConvPodMetadata) SetPod(pod *Datahub.Pod)  {
 	p := new(Datahub.Pod)
-	copier.Copy(&p, pod)
+	copier.Copy(p, pod)
 	c.Pod = p
+	c.Pod.Containers = nil
+}
+
+func (c *ConvPodMetadata) SetContainer(container *Datahub.Container) {
+	p := new(Datahub.Container)
+	copier.Copy(p, container)
+	c.Pod.Containers = append(c.Pod.Containers, p)
 }

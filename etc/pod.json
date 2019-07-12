@@ -46,7 +46,7 @@
       "status":{
         "state":{
           "waiting":{
-            "reason":"ContainerCreating"
+            "reason":""
           },
           "running":{
             "started_at":{

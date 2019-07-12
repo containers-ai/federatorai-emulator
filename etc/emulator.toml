@@ -21,7 +21,7 @@ address = "alameda-datahub.alameda.svc:50050"
 default = 3 # second
 
 [containers]
-container_namespace = "emulator"
+container_namespace = "openshift-monitoring"
 container_count = 100
 container_prefix_name = "emulator"
 container_cpu_csv_filepath = "/etc/emulator/metric_cpu.csv"
