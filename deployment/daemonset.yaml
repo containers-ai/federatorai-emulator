@@ -1,17 +1,10 @@
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  annotations:
-    deprecated.daemonset.template.generation: '13'
-  creationTimestamp: '2019-06-17T10:09:04Z'
-  generation: 13
   labels:
     app: federatorai-emulator
   name: federatorai-emulator
   namespace: openshift-monitoring
-  resourceVersion: '896931'
-  selfLink: /apis/apps/v1/namespaces/openshift-monitoring/daemonsets/federatorai-emulator
-  uid: efafa8d1-90e7-11e9-80e8-005056984676
 spec:
   revisionHistoryLimit: 10
   selector:
@@ -40,7 +33,7 @@ spec:
             - name: FAKE_SERVER_PORT
               value: '9200'
           image: >-
-            docker-registry.default.svc:5000/openshift-monitoring/federatorai-emulator:fake
+            docker-registry.default.svc:5000/openshift-monitoring/federatorai-emulator:latest
           imagePullPolicy: IfNotPresent
           name: node-exporter
           ports:
@@ -60,6 +53,9 @@ spec:
               mountPropagation: HostToContainer
               name: root
               readOnly: true
+            - name: federatorai-emulator-config
+              mountPath: /etc/emulator/emulator.toml
+              subPath: emulator.toml
       dnsPolicy: ClusterFirst
       hostNetwork: true
       hostPID: true
@@ -95,12 +91,3 @@ spec:
     rollingUpdate:
       maxUnavailable: 1
     type: RollingUpdate
-status:
-  currentNumberScheduled: 1
-  desiredNumberScheduled: 1
-  numberAvailable: 1
-  numberMisscheduled: 0
-  numberReady: 1
-  observedGeneration: 13
-  updatedNumberScheduled: 1
-

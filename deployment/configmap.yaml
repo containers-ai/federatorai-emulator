@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: federatorai-emulator-config
+  namespace: openshift-monitoring
+data:
+  emulator.toml: |-
+    [global]
+    emulator_listen_address = ":9200"
+    emulator_namespace = ""
+    emulator_web_path = "/metrics"
+    emulator_label_name = "emulator"
+    emulator_label_value = "emulator"
+    emulator_node_name = "emulator"
+    emulator_node_resource_cpu_cores = 8
+    emulator_node_resource_memory_bytes = 32000000000
+    emulator_node_resource_cpu_usage_range = "0"
+    emulator_node_resource_memory_usage_range = "0"
+    emulator_node_metadata_template = "/etc/emulator/node.json"
+    emulator_container_metadata_template = "/etc/emulator/pod.json"
+    emulator_container_ignore_creation = false
+    emulator_performance_scrap_seconds = 900
+
+    [datahub]
+    address = "alameda-datahub.alameda.svc:50050"
+
+    [datahub."retry-interval"]
+    default = 3 # second
+
+    [containers]
+    container_namespace = "openshift-monitoring"
+    container_vpa_count = 100
+    container_hpa_count = 20
+    container_prefix_name = "emulator"
+    container_cpu_csv_filepath = "/etc/emulator/metric_cpu.csv"
+    container_memory_csv_filepath = "/etc/emulator/metric_memory.csv"
+    container_pulled_start_hour = "0"
+    container_cpu_random = true
+    container_memory_random = true
+    container_cpu_random_range = "0.1-0.9"
+    container_memory_random_range = "0.1-0.9"
+    container_data_step = 3600

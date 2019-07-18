@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	Datahub "github.com/containers-ai/api/alameda_api/v1alpha1/datahub"
 	"github.com/jinzhu/copier"
+	"github.com/golang/protobuf/ptypes"
+	"time"
 )
 /*
 type PodMetadata struct {
@@ -146,4 +148,11 @@ func (c *ConvPodMetadata) SetContainer(container *Datahub.Container) {
 	p := new(Datahub.Container)
 	copier.Copy(p, container)
 	c.Pod.Containers = append(c.Pod.Containers, p)
+}
+
+func (c *ConvPodMetadata) SetCreatedTime(startedTime time.Time) {
+	c.Pod.StartTime, _ = ptypes.TimestampProto(startedTime)
+	for _, v := range c.Pod.Containers {
+		v.Status.State.Running.StartedAt = c.Pod.StartTime
+	}
 }

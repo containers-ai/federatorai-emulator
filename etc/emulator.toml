@@ -22,7 +22,8 @@ default = 3 # second
 
 [containers]
 container_namespace = "openshift-monitoring"
-container_count = 100
+container_vpa_count = 100
+container_hpa_count = 20
 container_prefix_name = "emulator"
 container_cpu_csv_filepath = "/etc/emulator/metric_cpu.csv"
 container_memory_csv_filepath = "/etc/emulator/metric_memory.csv"

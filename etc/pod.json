@@ -68,13 +68,13 @@
             }
           },
           "terminated":{
-            "exit_code":255,
-            "reason":"Error",
+            "exit_code":0,
+            "reason":"",
             "started_at":{
-              "seconds":1560148942
+              "seconds": 0
             },
             "finished_at":{
-              "seconds":1560735013
+              "seconds": 0
             }
           }
         },

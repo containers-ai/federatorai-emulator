@@ -25,7 +25,6 @@ import (
 var (
 	emulatorConf *emulator.Config
 	scope *log.Scope
-	containersName []string
 	containerCPULabelName []string
 	containerMemoryLabelName []string
 	containersCPUPerformance map[string][]string
@@ -49,12 +48,16 @@ type Exporter struct {
 	countvecPodCPU prometheus.CounterVec
 	gaugevecPodMemory prometheus.GaugeVec
 	// Container Name
-	containerNames []string
+	containerNamesVPA []string
+	containerNamesHPA []string
 	// Start time
 	startTime time.Time
 }
 
 func NewExporter(namespace string) *Exporter {
+	var containersName [][]string
+	var containersNameVPA []string
+	var containersNameHPA []string
 	startTime := time.Now().Local()
 	 // Node metrics
 	countvecNodeCPU := *prometheus.NewCounterVec(prometheus.CounterOpts{
@@ -97,13 +100,38 @@ func NewExporter(namespace string) *Exporter {
 		containerMemoryLabelName)
 
 	// Generator container name
-	for i := 0; i < emulatorConf.Containers.ContainerCount; i++ {
+	for i := 0; i < emulatorConf.Containers.ContainerCountVPA; i++ {
 		var containerName string
 		if len(emulatorConf.Containers.ContainerPrefixName) != 0 {
 			containerName = emulatorConf.Containers.ContainerPrefixName
 		}
-		containerName = containerName + "_" + strconv.Itoa(i)
-		containersName = append(containersName, containerName)
+		if len(containerName) > 0 {
+			containerName = "VPA_" + containerName + "_" + strconv.Itoa(i)
+		} else {
+			containerName = "VPA_" + strconv.Itoa(i)
+		}
+		containersNameVPA = append(containersNameVPA, containerName)
+	}
+
+	for i := 0; i < emulatorConf.Containers.ContainerCountHPA; i++ {
+		var containerName string
+		if len(emulatorConf.Containers.ContainerPrefixName) != 0 {
+			containerName = emulatorConf.Containers.ContainerPrefixName
+		}
+		if len(containerName) > 0 {
+			containerName = "HPA_" + containerName + "_" + strconv.Itoa(i)
+		} else {
+			containerName = "HPA_" + strconv.Itoa(i)
+		}
+		containersNameHPA = append(containersNameHPA, containerName)
+	}
+
+	if len(containersNameVPA) > 0 {
+		containersName = append(containersName, containersNameVPA)
+	}
+
+	if len(containersNameHPA) > 0 {
+		containersName = append(containersName, containersNameHPA)
 	}
 
 	// Load container cpu performance
@@ -116,12 +144,14 @@ func NewExporter(namespace string) *Exporter {
 			scope.Debugf(fmt.Sprintf("Data count:", len(data)))
 			scope.Debugf(fmt.Sprintf("Containers name:", containersName))
 			index := 0
-			for ; index < (len(containersName)); {
-				for _, v := range data {
-					containersCPUPerformance[containersName[index]] = v
-					index ++
-					if index >= (len(containersName) - 1) {
-						break
+			for _, n := range containersName {
+				for ; index < (len(n)); {
+					for _, v := range data {
+						containersCPUPerformance[n[index]] = v
+						index ++
+						if index >= (len(n) - 1) {
+							break
+						}
 					}
 				}
 			}
@@ -136,12 +166,14 @@ func NewExporter(namespace string) *Exporter {
 			scope.Errorf(fmt.Sprintf("Unable load memory performance data %s, %v", emulatorConf.Containers.ContainerMemoryCsvFilepath, err))
 		} else if len(data) > 0 {
 			index := 0
-			for  ; index < (len(containersName)); {
-				for _, v := range data {
-					containersMemoryPerformance[containersName[index]] = v
-					index ++
-					if index >= (len(containersName) - 1)  {
-						break
+			for _, n := range containersName {
+				for ; index < (len(n)); {
+					for _, v := range data {
+						containersMemoryPerformance[n[index]] = v
+						index ++
+						if index >= (len(n) - 1) {
+							break
+						}
 					}
 				}
 			}
@@ -160,7 +192,8 @@ func NewExporter(namespace string) *Exporter {
 		countvecPodCPU: countvecPodCPU,
 		gaugevecPodMemory: gaugevecPodMem,
 		// Config containers name
-		containerNames: containersName,
+		containerNamesHPA: containersNameHPA,
+		containerNamesVPA: containersNameVPA,
 		startTime: startTime}
 }
 
@@ -228,27 +261,32 @@ func (e *Exporter) collectPodCPU(ch chan <- prometheus.Metric) {
 			randomMax = 0
 		}
 	}
-	for _, v := range containersName {
-		value := float64(0)
-		i, ok := containersCPUPerformance[v]
-		if ok == false  {
-			if emulatorConf.Containers.ContainerCPURandom == true {
-				if randomMax == 0 && randomMin == 0 {
-					value = emulator.GenerateRandomFloat64(nil, nil, 6)
-				} else {
-					value = emulator.GenerateRandomFloat64(&randomMin, &randomMax, 6)
+
+	containersName := [][]string{e.containerNamesHPA, e.containerNamesVPA}
+
+	for _, n := range containersName {
+		for _, v := range n {
+			value := float64(0)
+			i, ok := containersCPUPerformance[v]
+			if ok == false {
+				if emulatorConf.Containers.ContainerCPURandom == true {
+					if randomMax == 0 && randomMin == 0 {
+						value = emulator.GenerateRandomFloat64(nil, nil, 6)
+					} else {
+						value = emulator.GenerateRandomFloat64(&randomMin, &randomMax, 6)
+					}
 				}
+			} else {
+				tm := time.Now().Local()
+				startHour, _ := strconv.ParseInt(emulatorConf.Containers.ContainerPulledStartHour, 10, 64)
+				dIndex := emulator.ConvertTimeMappingDataIndex(
+					&e.startTime, &tm, emulatorConf.Containers.ContainerDataStep, startHour, int64(len(i)))
+				value, _ = strconv.ParseFloat(i[dIndex], 64)
+				value = value * float64(emulatorConf.Global.EmulatorPrometheusScrapSeconds) / float64(emulatorConf.Containers.ContainerDataStep)
 			}
-		} else {
-			tm := time.Now().Local()
-			startHour, _ := strconv.ParseInt(emulatorConf.Containers.ContainerPulledStartHour, 10, 64)
-			dIndex := emulator.ConvertTimeMappingDataIndex(
-				&e.startTime, &tm, emulatorConf.Containers.ContainerDataStep, startHour, int64(len(i)))
-			value, _ = strconv.ParseFloat(i[dIndex], 64)
-			value = value * float64(emulatorConf.Global.EmulatorPrometheusScrapSeconds) / float64(emulatorConf.Containers.ContainerDataStep)
+			// 	containerCPULabelName = []string{"container_name", "cpu", "id", "image", "name", "namespace", "pod_name"}
+			e.countvecPodCPU.With(prometheus.Labels{"container_name": v, "cpu": "total", "id": v + "_1", "image": v + "emulator", "name": v, "namespace": emulatorConf.Containers.ContainersNamespace, "pod_name": v}).Add(value)
 		}
-		// 	containerCPULabelName = []string{"container_name", "cpu", "id", "image", "name", "namespace", "pod_name"}
-		e.countvecPodCPU.With(prometheus.Labels{"container_name": v, "cpu": "total", "id": v + "_1", "image": v + "emulator", "name": v, "namespace": emulatorConf.Containers.ContainersNamespace, "pod_name": v}).Add(value)
 	}
 	e.countvecPodCPU.Collect(ch)
 }
@@ -274,26 +312,29 @@ func (e *Exporter) collectPodMemory(ch chan <- prometheus.Metric) {
 			randomMax = 0
 		}
 	}
-	for _, v := range containersName {
-		value := float64(0)
-		i, ok := containersMemoryPerformance[v]
-		if ok == false  {
-			if emulatorConf.Containers.ContainerMemoryRandom == true {
-				if randomMax == 0 && randomMin == 0 {
-					value = emulator.GenerateRandomFloat64(nil, nil, 6)
-				} else {
-					value = emulator.GenerateRandomFloat64(&randomMin, &randomMax, 6)
+	containersName := [][]string{e.containerNamesHPA, e.containerNamesVPA}
+	for _, n := range containersName {
+		for _, v := range n {
+			value := float64(0)
+			i, ok := containersMemoryPerformance[v]
+			if ok == false {
+				if emulatorConf.Containers.ContainerMemoryRandom == true {
+					if randomMax == 0 && randomMin == 0 {
+						value = emulator.GenerateRandomFloat64(nil, nil, 6)
+					} else {
+						value = emulator.GenerateRandomFloat64(&randomMin, &randomMax, 6)
+					}
 				}
+			} else {
+				tm := time.Now().Local()
+				startHour, _ := strconv.ParseInt(emulatorConf.Containers.ContainerPulledStartHour, 10, 64)
+				dIndex := emulator.ConvertTimeMappingDataIndex(
+					&e.startTime, &tm, emulatorConf.Containers.ContainerDataStep, startHour, int64(len(i)))
+				value, _ = strconv.ParseFloat(i[dIndex], 64)
 			}
-		} else {
-			tm := time.Now().Local()
-			startHour, _ := strconv.ParseInt(emulatorConf.Containers.ContainerPulledStartHour, 10, 64)
-			dIndex := emulator.ConvertTimeMappingDataIndex(
-				&e.startTime, &tm, emulatorConf.Containers.ContainerDataStep, startHour, int64(len(i)))
-			value, _ = strconv.ParseFloat(i[dIndex], 64)
+			// containerMemoryLabelName = []string{"container_name", "id", "image", "name", "namespace", "pod_name"}
+			e.gaugevecPodMemory.With(prometheus.Labels{"container_name": v, "id": v + "_1", "image": v + "emulator", "name": v, "namespace": emulatorConf.Containers.ContainersNamespace, "pod_name": v}).Set(value)
 		}
-		// containerMemoryLabelName = []string{"container_name", "id", "image", "name", "namespace", "pod_name"}
-		e.gaugevecPodMemory.With(prometheus.Labels{"container_name": v, "id": v + "_1", "image": v + "emulator", "name": v, "namespace": emulatorConf.Containers.ContainersNamespace, "pod_name": v}).Set(value)
 	}
 	e.gaugevecPodMemory.Collect(ch)
 }
@@ -347,20 +388,19 @@ func (e *Exporter) createNodesMetadata() error {
 	return nil
 }
 
-func (e *Exporter) createPodsMetadata() error {
+func (e *Exporter) generatePods(containersName []string, vpaEnabled bool) ([]*dataRepo.Pod, error) {
 	var pods []*dataRepo.Pod
 	data, err := ioutil.ReadFile(emulatorConf.Global.EmulatorContainerMetadata)
 	if err != nil {
 		panic ("Unable to load container metadata from file")
-		return status.Errorf(
+		return nil, status.Errorf(
 			codes.Internal, "Unable to load container metadata from %s, %v",
 			emulatorConf.Global.EmulatorContainerMetadata, err)
 	}
-
-	for _, containerName := range e.containerNames {
+	for _, containerName := range containersName {
 		podMetadata := emulator.NewPodMetadata(data)
 		if podMetadata == nil {
-			return status.Errorf(codes.Internal, "Unable to convert container metadata")
+			return nil, status.Errorf(codes.Internal, "Unable to convert container metadata")
 		}
 		podMetadata.SetNamesapce(emulatorConf.Containers.ContainersNamespace)
 		podMetadata.SetNodeName(emulatorConf.Global.EmulatorNodeName)
@@ -372,9 +412,27 @@ func (e *Exporter) createPodsMetadata() error {
 		}
 		pMetadata.SetPodName(containerName)
 		pMetadata.SetContainerName(emulatorConf.Containers.ContainerPrefixName)
-		pMetadata.EnableHPA(true)
-		pMetadata.EnableVPA(true)
+		pMetadata.SetCreatedTime(e.startTime)
+		if vpaEnabled == true {
+			pMetadata.EnableVPA(true)
+		} else {
+			pMetadata.EnableHPA(true)
+		}
 		pods = append(pods, pMetadata.GetPod())
+	}
+	return pods, nil
+}
+
+func (e *Exporter) createPodsMetadata() error {
+	var pods []*dataRepo.Pod
+	vpaPods, err := e.generatePods(e.containerNamesVPA, true)
+	if len(vpaPods) != 0 {
+		pods = append(pods, vpaPods...)
+	}
+
+	hpaPods, err := e.generatePods(e.containerNamesHPA, false)
+	if len(hpaPods) != 0 {
+		pods = append(pods, hpaPods...)
 	}
 
 	scope.Infof(fmt.Sprintf("sample pod: %v", pods[0]))
