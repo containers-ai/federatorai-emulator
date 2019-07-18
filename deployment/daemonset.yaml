@@ -56,6 +56,10 @@ spec:
             - name: federatorai-emulator-config
               mountPath: /etc/emulator/emulator.toml
               subPath: emulator.toml
+      volumes:
+        -name: federatorai-emulator-config
+         configMap:
+           name: federatorai-emulator-config
       dnsPolicy: ClusterFirst
       hostNetwork: true
       hostPID: true
