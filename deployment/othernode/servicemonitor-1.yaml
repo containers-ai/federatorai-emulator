@@ -1,0 +1,15 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  resourceVersion: "690463"
+  generation: 1
+  labels:
+    k8s-app: federatorai-emulator-1
+  name: federatorai-emulator-1
+  namespace: openshift-monitoring
+spec:
+  endpoints:
+    - port: http
+  selector:
+    matchLabels:
+      k8s-app: federatorai-emulator-1

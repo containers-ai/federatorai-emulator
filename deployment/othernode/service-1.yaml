@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+  labels:
+    k8s-app: federatorai-emulator-1
+  name: federatorai-emulator-1
+  namespace: openshift-monitoring
+  resourceVersion: '690463'
+spec:
+  clusterIP: None
+  ports:
+    - name: http
+      port: 9300
+      protocol: TCP
+      targetPort: http
+  selector:
+    app: federatorai-emulator-1
+  sessionAffinity: None
+  type: ClusterIP
+status:
+  loadBalancer: {}
+

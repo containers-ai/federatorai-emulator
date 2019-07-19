@@ -2,19 +2,19 @@ apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   labels:
-    app: federatorai-emulator
-  name: federatorai-emulator
+    app: federatorai-emulator-1
+  name: federatorai-emulator-1
   namespace: openshift-monitoring
 spec:
   revisionHistoryLimit: 10
   selector:
     matchLabels:
-      app: federatorai-emulator
+      app: federatorai-emulator-1
   template:
     metadata:
       creationTimestamp: null
       labels:
-        app: federatorai-emulator
+        app: federatorai-emulator-1
     spec:
       containers:
         - env:
@@ -31,14 +31,14 @@ spec:
                   apiVersion: v1
                   fieldPath: metadata.namespace
             - name: FAKE_SERVER_PORT
-              value: '9200'
+              value: '9300'
           image: >-
             docker-registry.default.svc:5000/openshift-monitoring/federatorai-emulator:latest
           imagePullPolicy: IfNotPresent
-          name: node-exporter
+          name: federatorai-emulator
           ports:
-            - containerPort: 9200
-              hostPort: 9200
+            - containerPort: 9300
+              hostPort: 9300
               name: http
               protocol: TCP
           resources: {}
@@ -53,7 +53,7 @@ spec:
               mountPropagation: HostToContainer
               name: root
               readOnly: true
-            - name: federatorai-emulator-config
+            - name: federatorai-emulator-config-1
               mountPath: /etc/emulator/emulator.toml
               subPath: emulator.toml
       dnsPolicy: ClusterFirst
@@ -87,9 +87,9 @@ spec:
           secret:
             defaultMode: 420
             secretName: node-exporter-tls
-        - name: federatorai-emulator-config
+        - name: federatorai-emulator-config-1
           configMap:
-            name: federatorai-emulator-config
+            name: federatorai-emulator-config-1
   updateStrategy:
     rollingUpdate:
       maxUnavailable: 1
