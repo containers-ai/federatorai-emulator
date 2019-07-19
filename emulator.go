@@ -106,9 +106,9 @@ func NewExporter(namespace string) *Exporter {
 			containerName = emulatorConf.Containers.ContainerPrefixName
 		}
 		if len(containerName) > 0 {
-			containerName = "VPA_" + containerName + "_" + strconv.Itoa(i)
+			containerName = "VPA_" + emulatorConf.Global.EmulatorNodeName + "_" + containerName + "_" + strconv.Itoa(i)
 		} else {
-			containerName = "VPA_" + strconv.Itoa(i)
+			containerName = "VPA_" + emulatorConf.Global.EmulatorNodeName + "_" + strconv.Itoa(i)
 		}
 		containersNameVPA = append(containersNameVPA, containerName)
 	}
@@ -119,9 +119,9 @@ func NewExporter(namespace string) *Exporter {
 			containerName = emulatorConf.Containers.ContainerPrefixName
 		}
 		if len(containerName) > 0 {
-			containerName = "HPA_" + containerName + "_" + strconv.Itoa(i)
+			containerName = "HPA_" + emulatorConf.Global.EmulatorNodeName + "_" + containerName + "_" + strconv.Itoa(i)
 		} else {
-			containerName = "HPA_" + strconv.Itoa(i)
+			containerName = "HPA_" + emulatorConf.Global.EmulatorNodeName + "_" + strconv.Itoa(i)
 		}
 		containersNameHPA = append(containersNameHPA, containerName)
 	}

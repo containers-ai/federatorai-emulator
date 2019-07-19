@@ -1,6 +1,6 @@
-## federator-emulator
+## Federator-Emulator
 
-### Emulator of Alemada Nodes/Pods
+### Emulator of Alameda Nodes/Pods
 
 Emulator can generate multiple fake Nodes and Containers for the benchmark
 testing in the Alameda environment.

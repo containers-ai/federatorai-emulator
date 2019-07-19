@@ -33,7 +33,7 @@ spec:
             - name: FAKE_SERVER_PORT
               value: '9300'
           image: >-
-            docker-registry.default.svc:5000/openshift-monitoring/federatorai-emulator:latest
+            quay.io/prophetstor/federatorai-emulator-ubi:latest
           imagePullPolicy: IfNotPresent
           name: federatorai-emulator
           ports:
